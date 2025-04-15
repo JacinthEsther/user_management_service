@@ -50,7 +50,7 @@ Ensure that these values are set before running the application.
 Running the Application
 1. Clone the Repository
    First, clone the repository to your local machine:
-   git clone https://github.com/JacinthEsther/user-management-service.git
+   git clone https://github.com/JacinthEsther/user_management_service.git
 2. Install Dependencies
       Navigate to the project directory and install the required dependencies:
       cd user-management-service

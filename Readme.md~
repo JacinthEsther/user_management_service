@@ -122,3 +122,19 @@ Database Configuration: Ensure that your database is properly configured if you'
 
 Directory Structure
 Here’s the directory structure for the project:
+
+src/
+│
+├── main/
+│   ├── java/
+│   │   ├── com/
+│   │   │   └── usermanagementservice/
+│   │   │       ├── controllers/           # Controllers for user authentication and management
+│   │   │       ├── dtos/                  # DTOs (Data Transfer Objects)
+│   │   │       ├── config/                # Configuration classes like JwtUtil
+│   │   │       └── entities/              # Entities and domain models like User
+│   │   │       └── repositories/          # Repository interfaces and implementations
+│   │   │       └── services/              # Service interfaces and implementations
+│   └── resources/
+│       └── application.properties         # Configuration for the application (e.g., JWT settings)
+└── test/                                  # Unit tests for the application
