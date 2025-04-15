@@ -1,0 +1,136 @@
+package com.usermanagementservice;
+
+import com.usermanagementservice.services.impl.UserServiceImpl;
+import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+
+import com.usermanagementservice.dtos.requests.UserDto;
+import com.usermanagementservice.entities.User;
+import com.usermanagementservice.exception.UserNotFoundException;
+import com.usermanagementservice.mapper.UserMapper;
+import com.usermanagementservice.repositories.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+@Transactional
+class UserServiceImplTest {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserServiceImpl userService;
+
+    private UUID userId;
+    private UserDto userDto;
+
+    @BeforeEach
+    void setUp() {
+        userDto = new UserDto();
+        userDto.setUsername("testuser");
+        userDto.setEmail("test@example.com");
+        userDto.setPassword("password123");
+        userDto.setRole("USER");
+
+        User user = new User();
+        user.setId(userId);
+        user.setUsername("testuser");
+        user.setEmail("test@example.com");
+        user.setPassword(passwordEncoder.encode("password123"));
+        user.setRole("USER");
+
+        userRepository.save(user);
+    }
+
+    @Test
+    void createUserShouldReturnUserDto() {
+        UserDto result = userService.createUser(userDto);
+
+        assertNotNull(result);
+        assertEquals(userDto.getUsername(), result.getUsername());
+        assertEquals(userDto.getEmail(), result.getEmail());
+        assertEquals(userDto.getRole(), result.getRole());
+    }
+
+    @Test
+    void getUserByIdShouldReturnUserDto() {
+
+        UserDto result = userService.getUserById(userId);
+
+        assertNotNull(result);
+        assertEquals(userDto.getUsername(), result.getUsername());
+        assertEquals(userDto.getEmail(), result.getEmail());
+        assertEquals(userDto.getRole(), result.getRole());
+    }
+
+    @Test
+    void getUserByIdShouldThrowUserNotFoundException() {
+
+        UUID nonExistentUserId = UUID.randomUUID();
+
+        UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> userService.getUserById(nonExistentUserId));
+        assertEquals("User not found with id: " + nonExistentUserId, exception.getMessage());
+    }
+
+    @Test
+    void updateUserShouldReturnUpdatedUserDto() {
+
+        UserDto updatedDto = new UserDto();
+        updatedDto.setUsername("updatedUser");
+        updatedDto.setEmail("updated@example.com");
+        updatedDto.setPassword("newpassword123");
+        updatedDto.setRole("ADMIN");
+
+
+        UserDto result = userService.updateUser(userId, updatedDto);
+
+
+        assertNotNull(result);
+        assertEquals(updatedDto.getUsername(), result.getUsername());
+        assertEquals(updatedDto.getEmail(), result.getEmail());
+        assertEquals(updatedDto.getRole(), result.getRole());
+    }
+
+    @Test
+    void updateUserShouldThrowUserNotFoundException() {
+
+        UUID nonExistentUserId = UUID.randomUUID();
+        UserDto updatedDto = new UserDto();
+        updatedDto.setUsername("updatedUser");
+        updatedDto.setEmail("updated@example.com");
+        updatedDto.setRole("ADMIN");
+
+
+        UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> userService.updateUser(nonExistentUserId, updatedDto));
+        assertEquals("User not found with id: " + nonExistentUserId, exception.getMessage());
+    }
+
+    @Test
+    void deleteUserShouldExecuteSuccessfully() {
+
+        userService.deleteUser(userId);
+
+        assertFalse(userRepository.existsById(userId));
+    }
+
+    @Test
+    void deleteUserShouldThrowUserNotFoundException() {
+
+        UUID nonExistentUserId = UUID.randomUUID();
+
+        UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> userService.deleteUser(nonExistentUserId));
+        assertEquals("User not found with id: " + nonExistentUserId, exception.getMessage());
+    }
+}
+

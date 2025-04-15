@@ -1,0 +1,73 @@
+package com.usermanagementservice.controllers;
+
+import com.usermanagementservice.dtos.requests.UserDto;
+import com.usermanagementservice.services.interfaces.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/users")
+
+public class UserController {
+    private final UserService userService;
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @Operation(summary = "Create a new user", description = "This endpoint is used to create a new user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "User created successfully"),
+            @ApiResponse(responseCode = "400", description = "Bad request, validation failed")
+    })
+    @PostMapping
+    public ResponseEntity<UserDto> createUser(@RequestBody UserDto dto) {
+        return new ResponseEntity<>(userService.createUser(dto), HttpStatus.CREATED);
+    }
+
+    @Operation(summary = "Get user by ID", description = "This endpoint is used to retrieve a user by their ID. Requires ADMIN role.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved user"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access")
+    })
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserDto> getUser(@PathVariable UUID id) {
+        return ResponseEntity.ok(userService.getUserById(id));
+    }
+
+    @Operation(summary = "Update user details", description = "This endpoint is used to update user details. Requires ADMIN role.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User updated successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "400", description = "Bad request, validation failed"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access")
+    })
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @RequestBody UserDto dto) {
+        return ResponseEntity.ok(userService.updateUser(id, dto));
+    }
+
+    @Operation(summary = "Delete user by ID", description = "This endpoint is used to delete a user by their ID. Requires ADMIN role.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "User deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access")
+    })
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+}
+

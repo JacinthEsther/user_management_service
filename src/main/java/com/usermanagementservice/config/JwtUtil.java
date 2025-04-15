@@ -1,0 +1,66 @@
+package com.usermanagementservice.config;
+
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.Key;
+import java.util.Base64;
+import java.util.Date;
+
+@Component
+public class JwtUtil {
+    private final JwtConfig jwtConfig;
+
+    public JwtUtil(JwtConfig jwtConfig) {
+        this.jwtConfig = jwtConfig;
+    }
+
+    public String generateToken(Authentication authentication) {
+        String username = authentication.getName();
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + jwtConfig.getExpiration());
+
+        SecretKey secretKey = new SecretKeySpec(Base64.getDecoder().decode(jwtConfig.getSecret()), SignatureAlgorithm.HS256.getJcaName());
+
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+
+    public String extractUsername(String token) {
+        SecretKey secretKey = new SecretKeySpec(Base64.getDecoder().decode(jwtConfig.getSecret()), SignatureAlgorithm.HS256.getJcaName());
+
+        JwtParser parser = Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build();
+
+        return parser.parseClaimsJws(token)
+                .getBody()
+                .getSubject();
+    }
+
+
+    public boolean validateToken(String token) {
+        try {
+            SecretKey secretKey = new SecretKeySpec(Base64.getDecoder().decode(jwtConfig.getSecret()), SignatureAlgorithm.HS256.getJcaName());
+
+            JwtParser parser = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build();
+
+            parser.parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+}
